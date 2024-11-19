@@ -11,6 +11,8 @@ import com.fsse2410.BBB02_.data.person.domainObject.response.PersonResponseData;
 import com.fsse2410.BBB02_.data.person.dto.response.PersonResponseDto;
 import com.fsse2410.BBB02_.service.CourseService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/course") //打左呢句，以下mapping後面都不用再加野
+@Validated
 public class CourseController {
     private final CourseService courseService;
 
@@ -34,38 +37,44 @@ public class CourseController {
     }
 
     @GetMapping
-    public List<CourseResponseDto> getAllCourse() {
-        List<CourseResponseData> courseResponseDataList = courseService.getAllCourse();
+    public List<CourseResponseDto> getAllPerson(){
         List<CourseResponseDto> courseResponseDtoList = new ArrayList<>();
-        for (CourseResponseData courseResponseData : courseResponseDataList) {
+        List<CourseResponseData> courseResponseDataList = courseService.getAllPerson();
+        for (CourseResponseData courseResponseData : courseResponseDataList){
             CourseResponseDto courseResponseDto = new CourseResponseDto(courseResponseData);
+            courseResponseDtoList.add(courseResponseDto);
         }
         return courseResponseDtoList;
     }
 
     @PutMapping
-    public CourseResponseDto updateCourse(@RequestBody UpdateCourseRequestDto updateCourseRequestDto) {
+    public CourseResponseDto updateCourse(@Valid @RequestBody UpdateCourseRequestDto updateCourseRequestDto) {
         UpdateCourseRequestData updateCourseRequestData = new UpdateCourseRequestData(updateCourseRequestDto);
         CourseResponseData courseResponseData = courseService.updateCourse(updateCourseRequestData);
         CourseResponseDto courseResponseDto = new CourseResponseDto(courseResponseData);
         return courseResponseDto;
     }
 
-    @DeleteMapping
-    public CourseResponseDto deleteCourse(@RequestParam String courseId) {
+    @DeleteMapping("/{courseId}")
+    public CourseResponseDto deleteCourse(@PathVariable("courseId") String courseId) { //題目指定要用pathvariable:("/courseId")
         CourseResponseData courseResponseData = courseService.deleteCourse(courseId);
         CourseResponseDto courseResponseDto = new CourseResponseDto(courseResponseData);
         return courseResponseDto;
     }
 
-    @PatchMapping
-    public List<CourseResponseDto> addStudentByPersonHkid(String courseId, String hkid) {
-        List<CourseResponseData> courseResponseDataList = courseService.getAllCourse();
-        List<CourseResponseDto> courseResponseDtoList = new ArrayList<>();
-        for (CourseResponseData courseResponseData : courseResponseDataList) {
-            CourseResponseDto courseResponseDto = new CourseResponseDto(courseResponseData);
-            courseResponseDtoList.add(courseResponseDto);
-        }
-        return courseResponseDtoList;
+    @PatchMapping("/{courseId}/add-student/{studentHkid}") //("/{courseId}/student/add/")
+    public CourseResponseDto addStudent(@Pattern(regexp = "FSSE\\d{4}") @PathVariable String courseId,
+                                        @Pattern(regexp = "[A-Z]\\d{6}\\(([1-9]|A)\\)") @PathVariable String studentHkid){
+        CourseResponseData courseResponseData = courseService.addStudent(courseId, studentHkid);
+        CourseResponseDto courseResponseDto = new CourseResponseDto(courseResponseData);
+        return courseResponseDto;
     }
+    @PatchMapping("/{courseId}/remove-student/{studentHkid}") //("/{courseId}/student/add/")
+    public CourseResponseDto removeStudent(@Pattern(regexp = "FSSE\\d{4}") @PathVariable String courseId,
+                                           @Pattern(regexp = "[A-Z]\\d{6}\\(([1-9]|A)\\)") @PathVariable String studentHkid){
+        CourseResponseData courseResponseData = courseService.deleteStudent(courseId, studentHkid);
+        CourseResponseDto courseResponseDto = new CourseResponseDto(courseResponseData);
+        return courseResponseDto;
+    }
+
 }

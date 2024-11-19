@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import java.math.BigDecimal;
 
 public class UpdateCourseRequestDto {
-    @NotBlank
+    @Pattern(regexp = "FSSE\\d{4}")
     @JsonProperty("course_id")
     private String courseId;
 
@@ -16,19 +16,25 @@ public class UpdateCourseRequestDto {
     @JsonProperty("course_name")
     private String courseName;
 
-    @Min(500)
+    @Min(5000)
     private BigDecimal price;
 
     @Pattern(regexp = "[A-Z]\\d{6}\\(([1-9]|A)\\)")
     @JsonProperty("teacher_hkid")
     private String teacherHkid;
 
+    public UpdateCourseRequestDto(String courseId, String courseName, BigDecimal price, String teacherHkid) {
+        this.courseId = courseId;
+        this.courseName = courseName;
+        this.price = price;
+        this.teacherHkid = teacherHkid;
+    }
 
-    public @NotBlank String getCourseId() {
+    public @Pattern(regexp = "FSSE\\d{4}") String getCourseId() {
         return courseId;
     }
 
-    public void setCourseId(@NotBlank String courseId) {
+    public void setCourseId(@Pattern(regexp = "FSSE\\d{4}") String courseId) {
         this.courseId = courseId;
     }
 

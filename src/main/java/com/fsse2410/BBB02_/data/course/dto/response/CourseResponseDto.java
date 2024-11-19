@@ -2,7 +2,10 @@ package com.fsse2410.BBB02_.data.course.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fsse2410.BBB02_.data.course.domainObject.response.CourseResponseData;
+import com.fsse2410.BBB02_.data.course.entity.CourseEntity;
+import com.fsse2410.BBB02_.data.person.domainObject.response.PersonResponseData;
 import com.fsse2410.BBB02_.data.person.dto.response.PersonResponseDto;
+import com.fsse2410.BBB02_.data.person.entity.PersonEntity;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -29,6 +32,7 @@ public class CourseResponseDto {
         this.courseName = ta.getCourseName();
         this.price = ta.getPrice();
         this.teacher = new PersonResponseDto(ta.getTeacher()); //由data 轉去dto
+        setStudent(ta);
     }
 
     public String getCourseId() {
@@ -69,5 +73,11 @@ public class CourseResponseDto {
 
     public void setStudents(List<PersonResponseDto> students) {
         this.students = students;
+    }
+
+    public void setStudent(CourseResponseData courseResponseData){
+        for (PersonResponseData personResponseData : courseResponseData.getStudents()){
+            students.add(new PersonResponseDto(personResponseData));
+        }
     }
 }

@@ -16,12 +16,12 @@ public class CourseResponseData {
     private List<PersonResponseData> students = new ArrayList<>();
 
 
-
-    public CourseResponseData(CourseEntity courseEntity) {
-        this.courseId = courseEntity.getCourseId();
-        this.courseName = courseEntity.getCourseName();
-        this.price = courseEntity.getPrice();
-        this.teacher = new PersonResponseData(courseEntity.getTeacher()); //line 15
+    public CourseResponseData(CourseEntity entity) {
+        this.courseId = entity.getCourseId();
+        this.courseName = entity.getCourseName();
+        this.price = entity.getPrice();
+        this.teacher = new PersonResponseData(entity.getTeacher()); //line 15
+        setStudents(entity);
     }
 
     public String getCourseId() {
@@ -60,7 +60,18 @@ public class CourseResponseData {
         return students;
     }
 
+    //呢個setter最好不要del, 因為係比library自己用
     public void setStudents(List<PersonResponseData> students) {
         this.students = students;
+    }
+
+    public void setStudents(CourseEntity courseEntity) {
+        for (PersonEntity student : courseEntity.getStudents()) {
+//        Lv2
+//        PersonResponseData personResponseData = new PersonResponseData(student);
+//        students.add(personResponseData);
+//        Lv3
+            students.add(new PersonResponseData(student));
+        }
     }
 }

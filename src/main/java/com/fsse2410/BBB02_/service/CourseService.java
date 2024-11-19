@@ -12,16 +12,17 @@ import java.util.List;
 public interface CourseService {
     CourseResponseData createCourse(CreateCourseRequestData createCourseRequestData);
 
-    List<PersonResponseData> addStudentByPersonHkid(CreateCourseRequestData createCourseRequestData, String hkid);
 
-    List<PersonResponseData> addStudentByPersonHkid(String hkid);
-
-    List<PersonResponseData> addStudentByPersonHkid(CreatePersonRequestData createPersonRequestData, String hkid);
-
-    List<CourseResponseData> getAllCourse();
+    List<CourseResponseData> getAllPerson();
 
     CourseResponseData updateCourse(UpdateCourseRequestData updateCourseRequestData);
 
     CourseResponseData deleteCourse(String courseId);
 
+    //checking : 有無呢個course, 有無呢個student
+    CourseResponseData addStudent(String courseId, String personHkid);
+
+    CourseResponseData deleteStudent(String courseId, String studentHkid);
 }
+//check 呢個list有無呢個學生
+

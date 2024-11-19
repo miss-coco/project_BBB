@@ -4,14 +4,12 @@ import com.fsse2410.BBB02_.data.course.domainObject.request.CreateCourseRequestD
 import com.fsse2410.BBB02_.data.course.domainObject.request.UpdateCourseRequestData;
 import com.fsse2410.BBB02_.data.course.domainObject.response.CourseResponseData;
 import com.fsse2410.BBB02_.data.course.entity.CourseEntity;
-import com.fsse2410.BBB02_.data.person.domainObject.request.CreatePersonRequestData;
-import com.fsse2410.BBB02_.data.person.domainObject.response.PersonResponseData;
 import com.fsse2410.BBB02_.data.person.entity.PersonEntity;
-import com.fsse2410.BBB02_.exception.course.CourseExistedException;
-import com.fsse2410.BBB02_.exception.course.CourseNotFoundException;
-import com.fsse2410.BBB02_.exception.person.PersonNotFoundException;
+import com.fsse2410.BBB02_.exception.course.*;
+import com.fsse2410.BBB02_.repository.CourseRepository;
 import com.fsse2410.BBB02_.service.CourseService;
 import com.fsse2410.BBB02_.service.PersonService;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,19 +17,22 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CourseServiceImpl implements CourseService {
+
     private List<CourseEntity> courseEntityList = new ArrayList<>();
-    private List<PersonEntity> personEntityList = new ArrayList<>();
-    private Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
+    private static Logger logger = LoggerFactory.getLogger(CourseServiceImpl.class);
 
     //用autowired/ dependency
     private final PersonService personService;
 
+    private final CourseRepository courseRepository;
     @Autowired
-    public CourseServiceImpl(PersonService personService) {
+    public CourseServiceImpl(PersonService personService, CourseRepository courseRepository) {
         this.personService = personService;
+        this.courseRepository = courseRepository;
     }
 
     @Override
@@ -40,12 +41,20 @@ public class CourseServiceImpl implements CourseService {
             if (isExistedByCourseId(createCourseRequestData.getCourseId())) { //method check id 時,id是在createCourseRequestData拎的
                 throw new CourseExistedException(createCourseRequestData.getCourseId());
             }//拎requestData的getteacherid對下老師的teacher id是否一樣,是personNotFoundException
+//              Lv2
+//            PersonEntity teacherEntity = personService.getEntityByHkid(createCourseRequestData.getTeacherHkid());
+//            CourseEntity newCourseEntity = new CourseEntity(createCourseRequestData, teacherEntity);
+//            courseEntityList.add(newCourseEntity);
+//            CourseResponseData courseResponseData = new CourseResponseData(newCourseEntity);
+//            return courseResponseData;
 
-            PersonEntity teacherEntity = personService.getEntityByHkid(createCourseRequestData.getTeacherHkid());
-            CourseEntity newCourseEntity = new CourseEntity(createCourseRequestData, teacherEntity);
-            courseEntityList.add(newCourseEntity);
-            CourseResponseData courseResponseData = new CourseResponseData(newCourseEntity);
-            return courseResponseData;
+//            Lv3
+            CourseEntity newCourseEntity = new CourseEntity(
+                    createCourseRequestData, personService.getEntityByHkid(
+                    createCourseRequestData.getTeacherHkid())
+            );
+            newCourseEntity = courseRepository.save(newCourseEntity);
+            return new CourseResponseData(newCourseEntity);
         } catch (Exception ex) {
             logger.warn("Create Course Failed: " + ex.getMessage());
             throw ex;
@@ -59,94 +68,119 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
-    public List<PersonResponseData> addStudentByPersonHkid(CreateCourseRequestData createCourseRequestData, String hkid) {
-        return List.of();
-    }
-
-    @Override
-    public List<PersonResponseData> addStudentByPersonHkid(String hkid) {
-        return List.of();
-    }
-
-    @Override
-    public List<PersonResponseData> addStudentByPersonHkid(CreatePersonRequestData createPersonRequestData, String hkid) {
-        try {
-            List<PersonResponseData> courseResponseDataList = new ArrayList<>();
-            for (PersonEntity personEntity : personEntityList) {
-                if (!personEntity.getHkid().equals(hkid)) {
-                    continue;
-                }
-                PersonResponseData personResponseData = new PersonResponseData(personEntity);
-                courseResponseDataList.add(personResponseData);
-            }
-            return courseResponseDataList;
-        } catch (Exception ex) {
-            logger.warn("Person Hkid Existed: " + ex.getMessage());
-            throw ex;
-        }
-    }
-    @Override
-    public List<CourseResponseData> getAllCourse(){
+    public List<CourseResponseData> getAllPerson() {
         List<CourseResponseData> courseResponseDataList = new ArrayList<>();
-        for (CourseEntity courseEntity : courseEntityList){
+        for (CourseEntity courseEntity : courseRepository.findAll()) {
             CourseResponseData courseResponseData = new CourseResponseData(courseEntity);
             courseResponseDataList.add(courseResponseData);
         }
         return courseResponseDataList;
     }
+
     @Override
     public CourseResponseData updateCourse(UpdateCourseRequestData updateCourseRequestData) {
         try {
-            for (CourseEntity courseEntity : courseEntityList) {
-                if (courseEntity.getCourseId().equals(updateCourseRequestData.getCourseId())) {
-                    courseEntity.setPrice(updateCourseRequestData.getPrice());
-                    courseEntity.setCourseName(updateCourseRequestData.getCourseName());
-                    CourseResponseData courseResponseData = new CourseResponseData(courseEntity);
-                    return courseResponseData;
-                }
-            }
-            throw new PersonNotFoundException(updateCourseRequestData.getCourseId());
+//            Lv2
+//            CourseEntity courseEntity = getEntityByCourseId(updateCourseRequestData.getCourseId());
+//
+//            //拎返老師，才能做line 78
+//            PersonEntity teacher = personService.getEntityByHkid(updateCourseRequestData.getTeacherHkid());
+//            courseEntity.setCourseName(updateCourseRequestData.getCourseName());
+//            courseEntity.setPrice(updateCourseRequestData.getPrice());
+//            courseEntity.setTeacher(teacher);
+//            CourseResponseData courseResponseData = new CourseResponseData(courseEntity);
+//            return courseResponseData;
+
+//            Lv3
+            CourseEntity courseEntity = getEntityByCourseId(updateCourseRequestData.getCourseId());
+            courseEntity.setCourseName(updateCourseRequestData.getCourseName());
+            courseEntity.setPrice(updateCourseRequestData.getPrice());
+            courseEntity.setTeacher(personService.getEntityByHkid(updateCourseRequestData.getTeacherHkid()));
+
+
+            return new CourseResponseData(
+                    courseRepository.save(courseEntity)
+            );
+
         } catch (Exception ex) {
             logger.warn("Update Course Failed: " + ex.getMessage());
             throw ex;
         }
     }
+
     @Override
+    @Transactional
     public CourseResponseData deleteCourse(String courseId) {
         try {
-            CourseEntity deleteCourse = getEntityByCourseId(courseId);
-            courseEntityList.remove(deleteCourse);
-            return new CourseResponseData(deleteCourse);
+            CourseEntity courseEntity = getEntityByCourseId(courseId);
+            courseRepository.delete(courseEntity);
+            return new CourseResponseData(courseEntity);
         } catch (Exception ex) {
             logger.warn("Delete Course Failed: " + ex.getMessage());
             throw ex;
         }
     }
-   
 
-    public boolean existedByHkidd(String hkid){
-        for (PersonEntity personEntity : personEntityList){
-            if (personEntity.getHkid().equals(hkid)){
-                return true;
+    @Override
+    public CourseResponseData addStudent(String courseId, String studentHkid) {
+        try {
+            CourseEntity courseEntity = getEntityByCourseId(courseId); //拎左courseEntity和personEntity返來
+            PersonEntity studentEntity = personService.getEntityByHkid(studentHkid);
+//            //checking course 老師不會是student
+            if (courseEntity.getTeacher().getHkid().equals(studentHkid)) {
+                throw new StudentIsTeacherException(studentHkid);
             }
+            List<PersonEntity> studentList = courseEntity.getStudents(); //在courseEntity度拎個studentList出來
+            for (PersonEntity student : studentList) {
+                if (student.getHkid().equals(studentHkid)) {//check學生是否宱左個course
+                    throw new StudentExistedException(studentHkid);
+                }
+            }
+            studentList.add(studentEntity);
+
+//            courseEntity.setStudents(studentList);
+//            return new CourseResponseData(courseEntity);
+            return new CourseResponseData(
+                    courseRepository.save(courseEntity)
+            );
+
+        } catch (Exception ex) {
+            logger.warn("Add Student: " + ex.getMessage());
+            throw ex;
         }
-        return false;
+}
+
+    @Override
+    @Transactional
+    public CourseResponseData deleteStudent(String courseId, String studentHkid) {
+        try {
+            CourseEntity courseEntity = getEntityByCourseId(courseId);
+            CourseResponseData courseResponseData = new CourseResponseData(courseEntity);
+            courseRepository.delete(courseEntity);
+
+                return new CourseResponseData(courseEntity);
+
+        } catch (Exception ex) {
+            logger.warn("Remove Student: " + ex.getMessage());
+            throw ex;
+        }
     }
 
-    public boolean isExistedByCourseId(String courseId){
-        for (CourseEntity courseEntity : courseEntityList){
-            if (courseEntity.getCourseId().equals(courseId)){
-                return true;
-            }
-        }
-        return false;
+    public boolean isExistedByCourseId(String courseId) {
+        return courseRepository.existsById(courseId);
     }
-    public CourseEntity getEntityByCourseId(String courseId){
-        for (CourseEntity courseEntity : courseEntityList){
-            if (courseEntity.getCourseId().equalsIgnoreCase(courseId)){
-                return courseEntity;
-            }
-        }
-        throw new CourseNotFoundException(courseId);
+
+    public CourseEntity getEntityByCourseId(String courseId) {
+//        Lv2
+//        Optional<CourseEntity> optionalCourseEntity = courseRepository.findById(courseId);
+//        if (optionalCourseEntity.isEmpty()) {
+//            throw new CourseNotFoundException(courseId);
+//        }
+//        return optionalCourseEntity.get();
+
+//        Lv3
+        return courseRepository.findById(courseId).orElseThrow(
+                () -> new CourseNotFoundException(courseId)
+        );
     }
 }
